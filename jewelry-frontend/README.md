@@ -1,17 +1,19 @@
-# The Vault — Jewelry Storefront (Frontend Shell)
+# The Vault — Jewelry Storefront (Frontend)
 
 React + Vite + Tailwind + react-three-fiber front end for a 3D, glassmorphic
-jewelry storefront. This is phase 1 of the full-stack build — UI only, backed
-by mock data in `src/data/products.js`.
+jewelry storefront, wired to the Spring Boot backend, with a cart, WhatsApp
+checkout, and PWA install support for Android.
 
 ## Run it
 
 ```bash
 npm install
+cp .env.example .env   # points at the backend, defaults to http://localhost:8080
 npm run dev
 ```
 
-Open http://localhost:5173
+Open http://localhost:5173. Make sure the backend (see `../jewelry-backend`)
+is running first — every page except the hero pulls live data from it.
 
 ## Build
 
@@ -19,48 +21,53 @@ Open http://localhost:5173
 npm run build
 ```
 
-## What's here
+## How the pieces fit together
 
-- `src/components/Hero3D.jsx` + `GemModel.jsx` — the 3D hero (react-three-fiber
-  + drei, a floating transmissive gem with a rotating gold band)
-- `src/components/ProductCard.jsx` — the signature interaction: prices are
-  hidden behind a frosted glass panel that slides open ("the loupe") as each
-  card scrolls into view
-- `src/context/ThemeContext.jsx` — light/dark theme, persisted to
-  `localStorage`, toggled via the pill switch in the navbar
-- `src/pages/AdminDashboard.jsx` — upload form for new jewelry models +
-  listings table (currently updates local state only)
-- `src/pages/Login.jsx` / `Signup.jsx` — auth UI shells
+- **`src/api/`** — `client.js` (fetch wrapper: JSON/multipart, auth header,
+  error normalization matching the backend's `{status, message}` shape),
+  `products.js` (catalog CRUD, normalizes backend `imageUrl` into a full,
+  browser-loadable `image` URL), `auth.js` (signup/login/me)
+- **`src/context/AuthContext.jsx`** — session state (token + user), persisted
+  to `localStorage` — see the comment in that file for the tradeoff vs.
+  memory-only storage
+- **`src/context/CartContext.jsx`** — cart state, persisted to `localStorage`,
+  independent of login (you can add to cart without an account)
+- **`src/components/ProtectedRoute.jsx`** — guards `/admin`; redirects to
+  `/login` if signed out, to `/` if signed in but not an admin
+- **Pages that now fetch real data:** `Home`, `Shop`, `ProductDetail`,
+  `AdminDashboard` — each has `loading` / `error` / `ready` states
+- **`Login` / `Signup`** — call the backend, store the session, redirect
+  (admins land on `/admin`, everyone else on `/`)
+- **`Cart` / product pages** — "Order via WhatsApp" and "Ask about
+  customizing" still work exactly as before; they just now use real product
+  IDs and prices from the database instead of the old mock data
 
-## Design tokens
+## Testing the full loop locally
 
-- Colors: ink (`#0B0D14` background), pearl (`#F7F5F0` light bg), gold
-  (`#C9A15A` accent) — see `tailwind.config.js`
-- Type: Fraunces (display/serif), Inter (body), IBM Plex Mono (labels/prices)
+1. Start the backend (`mvn spring-boot:run` in `jewelry-backend`), pointed at
+   your Aiven MySQL
+2. Log in as the seeded admin (`ADMIN_EMAIL` / `ADMIN_PASSWORD` from the
+   backend's env, defaults to `admin@thevault-jewelry.com` / `ChangeMe123!`)
+   at `/login` — you'll land on `/admin`
+3. Add a piece with a real image — it'll appear on `/shop` and `/` immediately
+4. Sign up a second, normal account to confirm it lands on `/` and can't
+   reach `/admin`
+5. Add pieces to the cart, go to `/cart`, hit "Order via WhatsApp" — confirm
+   the message and total look right before it opens WhatsApp
 
-## Wiring to the Spring Boot backend (next phase)
+## Mobile / PWA
 
-Every place that needs a real API call is marked with a `// TODO` comment:
+Unchanged from before — see the icons in `public/icons/`, the manifest
+config in `vite.config.js`, and the sticky mobile action bars on the product
+and cart pages. None of that depends on the backend wiring above.
 
-- `src/pages/Login.jsx` -> `POST /api/auth/login`
-- `src/pages/Signup.jsx` -> `POST /api/auth/signup`
-- `src/pages/AdminDashboard.jsx` -> `POST /api/admin/products` (multipart,
-  for image upload)
-- `src/data/products.js` -> replace with `GET /api/products` (public) once
-  the backend is live; admin listing/detail routes should read from the
-  same table via `GET /api/products/{id}`
+## Known gaps to close before this is production-ready
 
-Recommended auth approach for the Spring Boot side: JWT issued on
-login/signup, stored in memory (not localStorage) on the frontend, attached
-as `Authorization: Bearer <token>` on admin-only requests. Role field
-(`USER` / `ADMIN`) on the user table gates `/api/admin/**` routes via
-Spring Security.
-
-## Next steps
-
-1. Spring Boot backend (Maven, no Lombok, Spring Security + JWT)
-2. MySQL schema on Aiven (users, products, product_images)
-3. Image upload storage (Aiven doesn't host files — use a bucket, e.g. S3/R2,
-   or store images as base64/BLOB only for small thumbnails)
-4. Replace mock `products.js` with live API calls (React Query or plain
-   fetch + `useEffect`)
+- No logout-everywhere on token expiry — if the JWT expires mid-session,
+  API calls will just start failing with 401s rather than bouncing you to
+  `/login` automatically. Worth adding a response interceptor in
+  `api/client.js` that calls `logout()` on a 401.
+- No "forgot password" flow.
+- Category filter on `/shop` is client-side (fetches everything, filters in
+  the browser) — fine at small catalog sizes, switch to
+  `getProducts(category)` server-side filtering if the catalog grows.

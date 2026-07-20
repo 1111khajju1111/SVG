@@ -1,20 +1,46 @@
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { products } from "../data/products";
-
-function formatINR(n) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
+import { Minus, Plus, MessageCircle, Check } from "lucide-react";
+import { owner } from "../data/owner";
+import { getProduct } from "../api/products";
+import { useCart } from "../context/CartContext";
+import { buildWhatsAppEnquiryLink, formatINR } from "../utils/whatsapp";
 
 export default function ProductDetail() {
   const { id } = useParams();
-  const product = products.find((p) => p.id === id);
+  const { addItem } = useCart();
+  const [product, setProduct] = useState(null);
+  const [status, setStatus] = useState("loading"); // loading | ready | error
+  const [qty, setQty] = useState(1);
+  const [added, setAdded] = useState(false);
 
-  if (!product) {
+  useEffect(() => {
+    let cancelled = false;
+    setStatus("loading");
+    getProduct(id)
+      .then((data) => {
+        if (cancelled) return;
+        setProduct(data);
+        setStatus("ready");
+      })
+      .catch(() => {
+        if (!cancelled) setStatus("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (status === "loading") {
+    return (
+      <div className="flex h-screen items-center justify-center text-sm text-current/50">
+        Opening the case…
+      </div>
+    );
+  }
+
+  if (status === "error" || !product) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 px-6 text-center">
         <h1 className="font-display text-3xl">This piece isn't in the case</h1>
@@ -25,8 +51,14 @@ export default function ProductDetail() {
     );
   }
 
+  const handleAddToCart = () => {
+    addItem(product, qty);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
+  };
+
   return (
-    <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-6 pb-24 pt-32 md:grid-cols-2">
+    <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-6 pb-32 pt-28 sm:pb-24 sm:pt-32 md:grid-cols-2">
       <motion.div
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -73,10 +105,76 @@ export default function ProductDetail() {
           </dl>
         </div>
 
-        <button className="mt-8 w-full rounded-full bg-gold-500 py-3 font-mono text-xs uppercase tracking-widest text-ink-950 transition-transform hover:scale-[1.01]">
-          Enquire about this piece
-        </button>
+        {/* Quantity selector */}
+        <div className="mt-8 flex items-center gap-4">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-current/50">
+            Quantity
+          </span>
+          <div className="glass flex items-center gap-1 rounded-full p-1">
+            <button
+              onClick={() => setQty((q) => Math.max(1, q - 1))}
+              aria-label="Decrease quantity"
+              className="flex h-9 w-9 items-center justify-center rounded-full active:scale-95"
+            >
+              <Minus size={14} />
+            </button>
+            <span className="w-8 text-center font-mono text-sm">{qty}</span>
+            <button
+              onClick={() => setQty((q) => q + 1)}
+              aria-label="Increase quantity"
+              className="flex h-9 w-9 items-center justify-center rounded-full active:scale-95"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
+        </div>
+
+        {/* Desktop / inline actions (hidden on small screens — sticky bar takes over) */}
+        <div className="mt-6 hidden flex-col gap-3 sm:flex">
+          <button
+            onClick={handleAddToCart}
+            className={`w-full rounded-full py-3 font-mono text-xs uppercase tracking-widest transition-transform hover:scale-[1.01] ${
+              added ? "bg-gold-300 text-ink-950" : "bg-gold-500 text-ink-950"
+            }`}
+          >
+            {added ? "Added to cart" : "Add to cart"}
+          </button>
+          <a
+            href={buildWhatsAppEnquiryLink(owner.whatsapp, product.name)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="glass flex w-full items-center justify-center gap-2 rounded-full py-3 font-mono text-xs uppercase tracking-widest text-current transition-transform hover:scale-[1.01]"
+          >
+            <MessageCircle size={16} />
+            Ask about customizing this piece
+          </a>
+        </div>
       </motion.div>
+
+      {/* Sticky mobile action bar */}
+      <div
+        className="glass-strong fixed inset-x-0 bottom-0 z-40 flex gap-2 p-3 shadow-glass sm:hidden"
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+      >
+        <a
+          href={buildWhatsAppEnquiryLink(owner.whatsapp, product.name)}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Ask on WhatsApp"
+          className="glass flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
+        >
+          <MessageCircle size={20} />
+        </a>
+        <button
+          onClick={handleAddToCart}
+          className={`flex flex-1 items-center justify-center gap-2 rounded-full font-mono text-xs uppercase tracking-widest transition-colors ${
+            added ? "bg-gold-300 text-ink-950" : "bg-gold-500 text-ink-950"
+          }`}
+        >
+          {added ? <Check size={16} /> : null}
+          {added ? "Added" : `Add to cart · ${formatINR(product.price * qty)}`}
+        </button>
+      </div>
     </div>
   );
 }

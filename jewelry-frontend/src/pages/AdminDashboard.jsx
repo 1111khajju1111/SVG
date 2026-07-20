@@ -1,25 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Upload, Package, Users, IndianRupee } from "lucide-react";
-import { products as seedProducts } from "../data/products";
+import { Upload, Package, Users, IndianRupee, Trash2 } from "lucide-react";
+import { getProducts, createProduct, deleteProduct } from "../api/products";
+import { useAuth } from "../context/AuthContext";
+import { formatINR } from "../utils/whatsapp";
 
-const stats = [
-  { icon: Package, label: "Listings", value: seedProducts.length },
-  { icon: Users, label: "Signups", value: "\u2014" },
-  { icon: IndianRupee, label: "Enquiries", value: "\u2014" },
-];
+const emptyForm = {
+  name: "",
+  category: "Rings",
+  metal: "",
+  stone: "",
+  price: "",
+  description: "",
+  image: null,
+};
 
 export default function AdminDashboard() {
-  const [form, setForm] = useState({
-    name: "",
-    category: "Rings",
-    metal: "",
-    stone: "",
-    price: "",
-    description: "",
-    image: null,
-  });
-  const [listings, setListings] = useState(seedProducts);
+  const { token, user } = useAuth();
+  const [form, setForm] = useState(emptyForm);
+  const [listings, setListings] = useState([]);
+  const [status, setStatus] = useState("loading"); // loading | ready | error
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  const loadListings = () => {
+    setStatus("loading");
+    getProducts()
+      .then((data) => {
+        setListings(data);
+        setStatus("ready");
+      })
+      .catch(() => setStatus("error"));
+  };
+
+  useEffect(loadListings, []);
 
   const handleChange = (field) => (e) =>
     setForm({ ...form, [field]: e.target.value });
@@ -29,23 +43,44 @@ export default function AdminDashboard() {
     setForm({ ...form, image: file || null });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: multipart POST to Spring Boot /api/admin/products once backend is ready
-    const preview = form.image ? URL.createObjectURL(form.image) : seedProducts[0].image;
-    const newProduct = {
-      id: `draft-${Date.now()}`,
-      name: form.name || "Untitled piece",
-      category: form.category,
-      metal: form.metal,
-      stone: form.stone,
-      price: Number(form.price) || 0,
-      description: form.description,
-      image: preview,
-    };
-    setListings([newProduct, ...listings]);
-    setForm({ name: "", category: "Rings", metal: "", stone: "", price: "", description: "", image: null });
+    setFormError("");
+
+    if (!form.image) {
+      setFormError("Please choose an image for this piece.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const created = await createProduct(token, form);
+      setListings([created, ...listings]);
+      setForm(emptyForm);
+      e.target.reset();
+    } catch (err) {
+      setFormError(err.message || "Couldn't add this piece. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  const handleDelete = async (id) => {
+    const previous = listings;
+    setListings(listings.filter((p) => p.id !== id));
+    try {
+      await deleteProduct(token, id);
+    } catch (err) {
+      setListings(previous); // roll back on failure
+      alert(err.message || "Couldn't delete this piece.");
+    }
+  };
+
+  const stats = [
+    { icon: Package, label: "Listings", value: status === "ready" ? listings.length : "—" },
+    { icon: Users, label: "Signups", value: "—" },
+    { icon: IndianRupee, label: "Enquiries", value: "—" },
+  ];
 
   return (
     <div className="mx-auto max-w-6xl px-6 pb-24 pt-32">
@@ -53,6 +88,7 @@ export default function AdminDashboard() {
         Admin
       </p>
       <h1 className="mt-2 font-display text-4xl">Dashboard</h1>
+      <p className="mt-1 text-sm text-current/60">Signed in as {user?.name}</p>
 
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {stats.map(({ icon: Icon, label, value }) => (
@@ -77,6 +113,12 @@ export default function AdminDashboard() {
           className="glass h-fit rounded-3xl p-6 shadow-glass"
         >
           <h2 className="mb-4 font-display text-xl">Upload a new model</h2>
+
+          {formError && (
+            <p className="mb-4 rounded-xl bg-red-500/10 px-3 py-2 text-xs text-red-400">
+              {formError}
+            </p>
+          )}
 
           <div className="flex flex-col gap-3">
             <input
@@ -111,6 +153,8 @@ export default function AdminDashboard() {
             />
             <input
               type="number"
+              min="0"
+              step="1"
               placeholder="Price (INR)"
               value={form.price}
               onChange={handleChange("price")}
@@ -127,44 +171,61 @@ export default function AdminDashboard() {
             <label className="glass flex cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-3 text-xs text-current/60 hover:text-gold-500">
               <Upload size={16} />
               {form.image ? form.image.name : "Upload model image"}
-              <input type="file" accept="image/*" onChange={handleImage} className="hidden" />
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/avif" onChange={handleImage} className="hidden" />
             </label>
           </div>
 
           <button
             type="submit"
-            className="mt-5 w-full rounded-full bg-gold-500 py-2.5 font-mono text-xs uppercase tracking-widest text-ink-950 transition-transform hover:scale-[1.01]"
+            disabled={submitting}
+            className="mt-5 w-full rounded-full bg-gold-500 py-2.5 font-mono text-xs uppercase tracking-widest text-ink-950 transition-transform hover:scale-[1.01] disabled:opacity-60"
           >
-            Add to catalog
+            {submitting ? "Uploading…" : "Add to catalog"}
           </button>
         </motion.form>
 
         <div className="glass rounded-3xl p-4 shadow-glass">
           <h2 className="mb-4 px-2 font-display text-xl">Current listings</h2>
-          <div className="flex flex-col divide-y divide-current/10">
-            {listings.map((p) => (
-              <div key={p.id} className="flex items-center gap-4 px-2 py-3">
-                <img
-                  src={p.image}
-                  alt={p.name}
-                  className="h-14 w-14 rounded-xl object-cover"
-                />
-                <div className="flex-1">
-                  <p className="text-sm">{p.name}</p>
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-current/50">
-                    {p.category}
-                  </p>
+
+          {status === "loading" && (
+            <p className="px-2 py-6 text-sm text-current/50">Loading…</p>
+          )}
+          {status === "error" && (
+            <p className="px-2 py-6 text-sm text-current/50">
+              Couldn't load listings. <button onClick={loadListings} className="underline">Retry</button>
+            </p>
+          )}
+          {status === "ready" && listings.length === 0 && (
+            <p className="px-2 py-6 text-sm text-current/50">Nothing listed yet.</p>
+          )}
+
+          {status === "ready" && listings.length > 0 && (
+            <div className="flex flex-col divide-y divide-current/10">
+              {listings.map((p) => (
+                <div key={p.id} className="flex items-center gap-4 px-2 py-3">
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className="h-14 w-14 rounded-xl object-cover"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm">{p.name}</p>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-current/50">
+                      {p.category}
+                    </p>
+                  </div>
+                  <p className="font-mono text-sm text-gold-500">{formatINR(p.price)}</p>
+                  <button
+                    onClick={() => handleDelete(p.id)}
+                    aria-label={`Delete ${p.name}`}
+                    className="ml-1 text-current/40 hover:text-red-400"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
-                <p className="font-mono text-sm text-gold-500">
-                  {new Intl.NumberFormat("en-IN", {
-                    style: "currency",
-                    currency: "INR",
-                    maximumFractionDigits: 0,
-                  }).format(p.price)}
-                </p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

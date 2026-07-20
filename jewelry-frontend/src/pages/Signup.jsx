@@ -1,14 +1,27 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useAuth } from "../context/AuthContext";
 
 export default function Signup() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { signup } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: wire to Spring Boot /api/auth/signup once backend is ready
-    console.log("signup submit", form);
+    setError("");
+    setLoading(true);
+    try {
+      await signup(form.name, form.email, form.password);
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(err.message || "Couldn't create your account. Try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -24,6 +37,12 @@ export default function Signup() {
           Join the Vault
         </p>
         <h1 className="mt-2 font-display text-3xl">Create an account</h1>
+
+        {error && (
+          <p className="mt-4 rounded-xl bg-red-500/10 px-4 py-2.5 text-xs text-red-400">
+            {error}
+          </p>
+        )}
 
         <div className="mt-8 flex flex-col gap-4">
           <input
@@ -45,7 +64,8 @@ export default function Signup() {
           <input
             type="password"
             required
-            placeholder="Password"
+            minLength={8}
+            placeholder="Password (min. 8 characters)"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             className="glass rounded-xl bg-transparent px-4 py-3 text-sm outline-none placeholder:text-current/40 focus:border-gold-500"
@@ -54,9 +74,10 @@ export default function Signup() {
 
         <button
           type="submit"
-          className="mt-6 w-full rounded-full bg-gold-500 py-3 font-mono text-xs uppercase tracking-widest text-ink-950 transition-transform hover:scale-[1.01]"
+          disabled={loading}
+          className="mt-6 w-full rounded-full bg-gold-500 py-3 font-mono text-xs uppercase tracking-widest text-ink-950 transition-transform hover:scale-[1.01] disabled:opacity-60"
         >
-          Create account
+          {loading ? "Creating account…" : "Create account"}
         </button>
 
         <p className="mt-6 text-center text-xs text-current/60">

@@ -26,7 +26,7 @@ export default function Hero3D() {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="mb-4 font-mono text-xs uppercase tracking-[0.35em] text-gold-500"
         >
-          The Vault &mdash; Fine Jewelry, Made Properly
+          SSS Jewelry &mdash; Fine Jewelry, Made Properly
         </motion.p>
         <motion.h1
           initial={{ opacity: 0, y: 20 }}

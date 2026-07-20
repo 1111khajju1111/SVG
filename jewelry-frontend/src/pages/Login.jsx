@@ -1,14 +1,29 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: wire to Spring Boot /api/auth/login once backend is ready
-    console.log("login submit", form);
+    setError("");
+    setLoading(true);
+    try {
+      const { user } = await login(form.email, form.password);
+      const redirectTo = location.state?.from || (user.role === "ADMIN" ? "/admin" : "/");
+      navigate(redirectTo, { replace: true });
+    } catch (err) {
+      setError(err.message || "Couldn't sign in. Check your details and try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -24,6 +39,12 @@ export default function Login() {
           Welcome back
         </p>
         <h1 className="mt-2 font-display text-3xl">Sign in</h1>
+
+        {error && (
+          <p className="mt-4 rounded-xl bg-red-500/10 px-4 py-2.5 text-xs text-red-400">
+            {error}
+          </p>
+        )}
 
         <div className="mt-8 flex flex-col gap-4">
           <input
@@ -46,9 +67,10 @@ export default function Login() {
 
         <button
           type="submit"
-          className="mt-6 w-full rounded-full bg-gold-500 py-3 font-mono text-xs uppercase tracking-widest text-ink-950 transition-transform hover:scale-[1.01]"
+          disabled={loading}
+          className="mt-6 w-full rounded-full bg-gold-500 py-3 font-mono text-xs uppercase tracking-widest text-ink-950 transition-transform hover:scale-[1.01] disabled:opacity-60"
         >
-          Sign in
+          {loading ? "Signing in…" : "Sign in"}
         </button>
 
         <p className="mt-6 text-center text-xs text-current/60">

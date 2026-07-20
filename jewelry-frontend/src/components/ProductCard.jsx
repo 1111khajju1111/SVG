@@ -1,6 +1,8 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { Link } from "react-router-dom";
+import { Plus, Check } from "lucide-react";
+import { useCart } from "../context/CartContext";
 
 function formatINR(n) {
   return new Intl.NumberFormat("en-IN", {
@@ -13,6 +15,16 @@ function formatINR(n) {
 export default function ProductCard({ product }) {
   const ref = useRef(null);
   const inView = useInView(ref, { amount: 0.55, once: false });
+  const { addItem } = useCart();
+  const [added, setAdded] = useState(false);
+
+  const handleAdd = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem(product, 1);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1200);
+  };
 
   return (
     <Link to={`/product/${product.id}`} className="group block">
@@ -30,6 +42,16 @@ export default function ProductCard({ product }) {
             alt={product.name}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
+
+          <button
+            onClick={handleAdd}
+            aria-label={`Add ${product.name} to cart`}
+            className={`absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full shadow-glass transition-colors ${
+              added ? "bg-gold-500 text-ink-950" : "glass-strong text-current active:scale-95"
+            }`}
+          >
+            {added ? <Check size={18} /> : <Plus size={18} />}
+          </button>
 
           {/* Loupe / tissue-reveal price panel */}
           <motion.div

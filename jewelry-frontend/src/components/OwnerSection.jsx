@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { owner } from "../data/products";
+import { owner } from "../data/owner";
 
 export default function OwnerSection() {
   return (

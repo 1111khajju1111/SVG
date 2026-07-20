@@ -1,5 +1,5 @@
 import { Mail, Phone, MapPin, AtSign } from "lucide-react";
-import { owner } from "../data/products";
+import { owner } from "../data/owner";
 
 const items = [
   { icon: Mail, label: "Email", value: owner.email, href: `mailto:${owner.email}` },
