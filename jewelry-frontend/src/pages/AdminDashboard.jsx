@@ -133,7 +133,7 @@ export default function AdminDashboard() {
               onChange={handleChange("category")}
               className="glass rounded-xl bg-transparent px-3 py-2.5 text-sm outline-none"
             >
-              {["Rings", "Necklaces", "Earrings", "Bracelets"].map((c) => (
+              {["Rings", "Necklaces", "Earrings", "Bracelets","god's jewelry"].map((c) => (
                 <option key={c} value={c} className="bg-ink-900">
                   {c}
                 </option>
