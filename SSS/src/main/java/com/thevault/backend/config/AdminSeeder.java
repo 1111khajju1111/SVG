@@ -20,7 +20,7 @@ public class AdminSeeder implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordUtil passwordUtil;
 
-    @Value("${app.admin.email:admin@thevault-jewelry.com}")
+    @Value("${app.admin.email:admin@sss-jewelry.com}")
     private String adminEmail;
 
     @Value("${app.admin.password:ChangeMe123!}")

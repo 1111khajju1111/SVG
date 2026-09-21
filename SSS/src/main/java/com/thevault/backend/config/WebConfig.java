@@ -27,7 +27,12 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // Serves uploaded jewelry images at http://localhost:8080/uploads/<filename>
+        // Filenames are random UUIDs and never reused, so a long, immutable
+        // cache lifetime is safe: browsers stop re-requesting a product photo
+        // it already has on every page view, which was a big part of the lag.
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadDir + "/");
+                .addResourceLocations("file:" + uploadDir + "/")
+                .setCachePeriod(60 * 60 * 24 * 30) // 30 days
+                .resourceChain(true);
     }
 }

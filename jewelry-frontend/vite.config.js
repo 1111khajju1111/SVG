@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'icons/apple-touch-icon.png'],
       manifest: {
-        name: 'The Vault — Fine Jewelry',
-        short_name: 'The Vault',
+        name: 'SSS Jewelry — Fine Jewelry',
+        short_name: 'SSS Jewelry',
         description: 'A small studio collection of hand-proofed rings, chains and stones.',
         theme_color: '#0B0D14',
         background_color: '#0B0D14',
@@ -53,7 +53,7 @@ export default defineConfig({
             urlPattern: ({ request }) => request.destination === 'image',
             handler: 'CacheFirst',
             options: {
-              cacheName: 'vault-images',
+              cacheName: 'sss-jewelry-images',
               expiration: { maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },

@@ -1,4 +1,4 @@
-# The Vault — Jewelry Storefront (Frontend)
+# SSS Jewelry — Storefront (Frontend)
 
 React + Vite + Tailwind + react-three-fiber front end for a 3D, glassmorphic
 jewelry storefront, wired to the Spring Boot backend, with a cart, WhatsApp
@@ -47,7 +47,7 @@ npm run build
 1. Start the backend (`mvn spring-boot:run` in `jewelry-backend`), pointed at
    your Aiven MySQL
 2. Log in as the seeded admin (`ADMIN_EMAIL` / `ADMIN_PASSWORD` from the
-   backend's env, defaults to `admin@thevault-jewelry.com` / `ChangeMe123!`)
+   backend's env, defaults to `admin@sss-jewelry.com` / `ChangeMe123!`)
    at `/login` — you'll land on `/admin`
 3. Add a piece with a real image — it'll appear on `/shop` and `/` immediately
 4. Sign up a second, normal account to confirm it lands on `/` and can't

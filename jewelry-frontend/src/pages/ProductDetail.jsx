@@ -68,6 +68,9 @@ export default function ProductDetail() {
         <img
           src={product.image}
           alt={product.name}
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
           className="aspect-square w-full object-cover"
         />
       </motion.div>

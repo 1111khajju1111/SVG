@@ -15,6 +15,8 @@ export default function OwnerSection() {
           <img
             src={owner.image}
             alt={owner.name}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover"
           />
         </motion.div>

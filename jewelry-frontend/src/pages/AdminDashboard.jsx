@@ -206,6 +206,8 @@ export default function AdminDashboard() {
                   <img
                     src={p.image}
                     alt={p.name}
+                    loading="lazy"
+                    decoding="async"
                     className="h-14 w-14 rounded-xl object-cover"
                   />
                   <div className="flex-1">

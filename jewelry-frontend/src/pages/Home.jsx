@@ -1,9 +1,14 @@
-import { useEffect, useState } from "react";
-import Hero3D from "../components/Hero3D";
+import { useEffect, useState, Suspense, lazy } from "react";
 import ProductGrid from "../components/ProductGrid";
 import OwnerSection from "../components/OwnerSection";
 import ContactSection from "../components/ContactSection";
 import { getProducts } from "../api/products";
+
+// three.js + drei are the heaviest thing this app ships (well over half the
+// JS bundle). Loading Hero3D lazily means the rest of the home page — nav,
+// product grid, footer — can paint immediately instead of waiting on that
+// download and parse first.
+const Hero3D = lazy(() => import("../components/Hero3D"));
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -27,7 +32,9 @@ export default function Home() {
 
   return (
     <>
-      <Hero3D />
+      <Suspense fallback={<div className="h-screen w-full bg-sss-radial bg-ink-950" />}>
+        <Hero3D />
+      </Suspense>
 
       {status === "loading" && (
         <p className="mx-auto max-w-6xl px-6 py-24 text-center text-sm text-current/50">

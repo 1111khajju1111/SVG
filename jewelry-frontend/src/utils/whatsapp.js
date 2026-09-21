@@ -13,7 +13,7 @@ function formatINR(n) {
  */
 export function buildWhatsAppOrderLink(whatsappNumber, items, totalPrice, note = "") {
   const lines = [
-    "Hi! I'd like to order the following from The Vault:",
+    "Hi! I'd like to order the following from SSS Jewelry:",
     "",
     ...items.map(
       (i) => `- ${i.name} (x${i.qty}) — ${formatINR(i.price * i.qty)}`

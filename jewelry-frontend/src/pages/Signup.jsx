@@ -34,7 +34,7 @@ export default function Signup() {
         className="glass w-full max-w-md rounded-3xl p-8 shadow-glass"
       >
         <p className="font-mono text-xs uppercase tracking-[0.3em] text-gold-500">
-          Join the Vault
+          Join SSS Jewelry
         </p>
         <h1 className="mt-2 font-display text-3xl">Create an account</h1>
 

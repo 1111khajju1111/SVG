@@ -1,0 +1,21 @@
+{
+  "appId": "com.sssjewelry.app",
+  "appName": "SSS Jewelry",
+  "webDir": "dist",
+  "backgroundColor": "#0B0D14",
+  "android": {
+    "backgroundColor": "#0B0D14",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 600,
+      "backgroundColor": "#0B0D14",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0B0D14"
+    }
+  }
+}

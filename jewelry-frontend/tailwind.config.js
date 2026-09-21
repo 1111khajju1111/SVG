@@ -32,7 +32,7 @@ export default {
         mono: ["IBM Plex Mono", "monospace"],
       },
       backgroundImage: {
-        "vault-radial": "radial-gradient(circle at 50% 0%, rgba(201,161,90,0.15), transparent 60%)",
+        "sss-radial": "radial-gradient(circle at 50% 0%, rgba(201,161,90,0.15), transparent 60%)",
       },
       boxShadow: {
         glass: "0 8px 32px rgba(0,0,0,0.25)",

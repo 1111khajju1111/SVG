@@ -5,7 +5,7 @@ import GemModel from "./GemModel";
 
 export default function Hero3D() {
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-vault-radial">
+    <section className="relative h-screen w-full overflow-hidden bg-sss-radial">
       <div className="absolute inset-0">
         <Canvas
           shadows
