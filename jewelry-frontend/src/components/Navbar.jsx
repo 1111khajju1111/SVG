@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Menu, X, ShoppingBag, User, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, ShoppingBag, User, LogOut, LayoutDashboard, Heart } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
 
 const links = [
@@ -15,6 +16,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const { totalItems } = useCart();
+  const { wishlistCount } = useWishlist();
   const { isAuthenticated, isAdmin, user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -27,7 +29,7 @@ export default function Navbar() {
   return (
     <header className="fixed top-4 left-1/2 z-50 w-[92%] max-w-5xl -translate-x-1/2">
       <nav className="glass flex items-center justify-between rounded-2xl px-5 py-3 shadow-glass">
-        <Link to="/" className="font-display text-lg tracking-wide">
+        <Link to="/" className="font-display text-base tracking-wide sm:text-lg">
           SSS <span className="text-gold-500">JEWELRY</span>
         </Link>
 
@@ -47,12 +49,24 @@ export default function Navbar() {
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-0.5 sm:gap-2">
           <ThemeToggle />
+          <Link
+            to="/wishlist"
+            aria-label="Wishlist"
+            className="relative rounded-full p-1.5 transition-colors hover:bg-gold-500/10 sm:p-2"
+          >
+            <Heart size={18} />
+            {wishlistCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold-500 px-1 font-mono text-[9px] text-ink-950">
+                {wishlistCount}
+              </span>
+            )}
+          </Link>
           <Link
             to="/cart"
             aria-label="Cart"
-            className="relative rounded-full p-2 transition-colors hover:bg-gold-500/10"
+            className="relative rounded-full p-1.5 transition-colors hover:bg-gold-500/10 sm:p-2"
           >
             <ShoppingBag size={18} />
             {totalItems > 0 && (

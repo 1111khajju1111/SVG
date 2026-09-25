@@ -1,15 +1,23 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Minus, Plus, MessageCircle, Check } from "lucide-react";
+import { Minus, Plus, MessageCircle, Check, Heart } from "lucide-react";
 import { owner } from "../data/owner";
 import { getProduct } from "../api/products";
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
+import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import { buildWhatsAppEnquiryLink, formatINR } from "../utils/whatsapp";
+import { logEnquiry } from "../api/enquiries";
+import { recordView } from "../utils/recentlyViewed";
 
 export default function ProductDetail() {
   const { id } = useParams();
   const { addItem } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const [product, setProduct] = useState(null);
   const [status, setStatus] = useState("loading"); // loading | ready | error
   const [qty, setQty] = useState(1);
@@ -23,6 +31,7 @@ export default function ProductDetail() {
         if (cancelled) return;
         setProduct(data);
         setStatus("ready");
+        recordView(data);
       })
       .catch(() => {
         if (!cancelled) setStatus("error");
@@ -57,6 +66,23 @@ export default function ProductDetail() {
     setTimeout(() => setAdded(false), 1500);
   };
 
+  const handleAskAboutPiece = () => {
+    logEnquiry({
+      type: "PRODUCT",
+      productId: Number(product.id),
+      productName: product.name,
+      customerName: user?.name,
+    });
+  };
+
+  const handleToggleWishlist = () => {
+    toggleWishlist(product.id);
+    showToast(
+      isWishlisted(product.id) ? "Removed from wishlist" : "Saved to your wishlist",
+      "success"
+    );
+  };
+
   return (
     <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-6 pb-32 pt-28 sm:pb-24 sm:pt-32 md:grid-cols-2">
       <motion.div
@@ -80,9 +106,21 @@ export default function ProductDetail() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
       >
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-gold-500">
-          {product.category}
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <p className="font-mono text-xs uppercase tracking-[0.3em] text-gold-500">
+            {product.category}
+          </p>
+          <button
+            onClick={handleToggleWishlist}
+            aria-label={isWishlisted(product.id) ? "Remove from wishlist" : "Save to wishlist"}
+            className="glass flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-transform active:scale-95"
+          >
+            <Heart
+              size={16}
+              className={isWishlisted(product.id) ? "fill-gold-500 text-gold-500" : "text-current/60"}
+            />
+          </button>
+        </div>
         <h1 className="mt-2 font-display text-4xl">{product.name}</h1>
         <p className="mt-4 font-display text-2xl text-gold-500">
           {formatINR(product.price)}
@@ -144,6 +182,7 @@ export default function ProductDetail() {
           </button>
           <a
             href={buildWhatsAppEnquiryLink(owner.whatsapp, product.name)}
+            onClick={handleAskAboutPiece}
             target="_blank"
             rel="noopener noreferrer"
             className="glass flex w-full items-center justify-center gap-2 rounded-full py-3 font-mono text-xs uppercase tracking-widest text-current transition-transform hover:scale-[1.01]"
@@ -161,6 +200,7 @@ export default function ProductDetail() {
       >
         <a
           href={buildWhatsAppEnquiryLink(owner.whatsapp, product.name)}
+          onClick={handleAskAboutPiece}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Ask on WhatsApp"

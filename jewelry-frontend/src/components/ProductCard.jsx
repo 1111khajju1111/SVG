@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Plus, Check } from "lucide-react";
+import { Plus, Check, Heart } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
 
 function formatINR(n) {
   return new Intl.NumberFormat("en-IN", {
@@ -16,7 +17,9 @@ export default function ProductCard({ product }) {
   const ref = useRef(null);
   const inView = useInView(ref, { amount: 0.55, once: false });
   const { addItem } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const [added, setAdded] = useState(false);
+  const wishlisted = isWishlisted(product.id);
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -24,6 +27,12 @@ export default function ProductCard({ product }) {
     addItem(product, 1);
     setAdded(true);
     setTimeout(() => setAdded(false), 1200);
+  };
+
+  const handleWishlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist(product.id);
   };
 
   return (
@@ -53,6 +62,14 @@ export default function ProductCard({ product }) {
             }`}
           >
             {added ? <Check size={18} /> : <Plus size={18} />}
+          </button>
+
+          <button
+            onClick={handleWishlist}
+            aria-label={wishlisted ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
+            className="glass-strong absolute left-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full text-current shadow-glass active:scale-95"
+          >
+            <Heart size={16} className={wishlisted ? "fill-gold-500 text-gold-500" : ""} />
           </button>
 
           {/* Loupe / tissue-reveal price panel */}

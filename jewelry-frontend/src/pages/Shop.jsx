@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Search, X } from "lucide-react";
 import ProductGrid from "../components/ProductGrid";
 import { getProducts } from "../api/products";
 
@@ -6,6 +7,7 @@ export default function Shop() {
   const [products, setProducts] = useState([]);
   const [status, setStatus] = useState("loading"); // loading | ready | error
   const [active, setActive] = useState("All");
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -28,8 +30,18 @@ export default function Shop() {
     [products]
   );
 
-  const filtered =
-    active === "All" ? products : products.filter((p) => p.category === active);
+  const filtered = useMemo(() => {
+    let list = active === "All" ? products : products.filter((p) => p.category === active);
+    const q = query.trim().toLowerCase();
+    if (q) {
+      list = list.filter((p) =>
+        [p.name, p.metal, p.stone, p.category].filter(Boolean).some((field) =>
+          field.toLowerCase().includes(q)
+        )
+      );
+    }
+    return list;
+  }, [products, active, query]);
 
   return (
     <div className="pt-32">
@@ -39,8 +51,27 @@ export default function Shop() {
         </p>
         <h1 className="font-display text-4xl sm:text-5xl">The full collection</h1>
 
+        <div className="glass mt-8 flex items-center gap-2 rounded-full px-4 py-3">
+          <Search size={16} className="shrink-0 text-current/40" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name, metal or stone…"
+            className="w-full bg-transparent text-sm outline-none placeholder:text-current/40"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery("")}
+              aria-label="Clear search"
+              className="shrink-0 text-current/40 hover:text-current/70"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+
         {status === "ready" && categories.length > 1 && (
-          <div className="mt-8 flex flex-wrap gap-2">
+          <div className="mt-6 flex flex-wrap gap-2">
             {categories.map((c) => (
               <button
                 key={c}
@@ -70,7 +101,7 @@ export default function Shop() {
       )}
       {status === "ready" && filtered.length === 0 && (
         <p className="mx-auto max-w-6xl px-6 py-24 text-center text-sm text-current/50">
-          Nothing in this category yet.
+          Nothing matches — try a different search or category.
         </p>
       )}
       {status === "ready" && filtered.length > 0 && <ProductGrid products={filtered} />}

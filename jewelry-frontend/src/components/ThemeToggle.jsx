@@ -9,13 +9,14 @@ export default function ThemeToggle() {
     <button
       onClick={toggleTheme}
       aria-label="Toggle color theme"
-      className="glass flex h-9 w-16 items-center rounded-full px-1 transition-colors"
+      className="glass flex h-8 w-14 items-center rounded-full px-1 transition-colors sm:h-9 sm:w-16"
     >
       <div
-        className="flex h-7 w-7 items-center justify-center rounded-full bg-gold-500 text-ink-950 transition-transform duration-300"
-        style={{ transform: isDark ? "translateX(0)" : "translateX(28px)" }}
+        className={`flex h-6 w-6 items-center justify-center rounded-full bg-gold-500 text-ink-950 transition-transform duration-300 sm:h-7 sm:w-7 ${
+          isDark ? "translate-x-0" : "translate-x-[24px] sm:translate-x-[28px]"
+        }`}
       >
-        {isDark ? <Moon size={14} /> : <Sun size={14} />}
+        {isDark ? <Moon size={13} /> : <Sun size={13} />}
       </div>
     </button>
   );

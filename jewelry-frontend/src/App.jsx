@@ -6,14 +6,15 @@ import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // Route-level code splitting: each page becomes its own JS chunk instead of
-// all of them (plus three.js/drei, pulled in by Home -> Hero3D) shipping in
-// one bundle on first load. This is most of the "everything feels slow"
-// complaint — the old bundle downloaded and parsed the 3D library before a
-// visitor could even see the shop or login page.
+// all of them shipping in one bundle on first load. The home page's hero is
+// now plain CSS/SVG (no three.js/drei — that WebGL dependency, well over
+// half the old JS bundle, has been removed entirely), so this split now
+// mostly just keeps admin-only and auth-only code out of the main path.
 const Home = lazy(() => import("./pages/Home"));
 const Shop = lazy(() => import("./pages/Shop"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Cart = lazy(() => import("./pages/Cart"));
+const Wishlist = lazy(() => import("./pages/Wishlist"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="/shop" element={<Shop />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route

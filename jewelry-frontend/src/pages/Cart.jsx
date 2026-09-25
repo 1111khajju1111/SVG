@@ -3,12 +3,24 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Minus, Plus, Trash2, MessageCircle, ShoppingBag } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { owner } from "../data/owner";
 import { buildWhatsAppOrderLink, formatINR } from "../utils/whatsapp";
+import { logEnquiry } from "../api/enquiries";
 
 export default function Cart() {
   const { items, updateQty, removeItem, totalPrice, totalItems } = useCart();
+  const { user } = useAuth();
   const [note, setNote] = useState("");
+
+  const handleCheckoutClick = () => {
+    logEnquiry({
+      type: "ORDER",
+      productName: items.map((i) => `${i.name} (x${i.qty})`).join(", "),
+      customerName: user?.name,
+      message: note,
+    });
+  };
 
   if (items.length === 0) {
     return (
@@ -124,6 +136,7 @@ export default function Cart() {
         </div>
         <a
           href={whatsappLink}
+          onClick={handleCheckoutClick}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gold-500 py-4 font-mono text-xs uppercase tracking-widest text-ink-950 transition-transform hover:scale-[1.01]"
@@ -152,6 +165,7 @@ export default function Cart() {
         </div>
         <a
           href={whatsappLink}
+          onClick={handleCheckoutClick}
           target="_blank"
           rel="noopener noreferrer"
           className="flex w-full items-center justify-center gap-2 rounded-full bg-gold-500 py-3 font-mono text-xs uppercase tracking-widest text-ink-950"

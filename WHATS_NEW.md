@@ -120,3 +120,54 @@ npm run android:sync
 "SSS Jewelry", dark splash screen matching the app's theme). Change the `appId`
 before a real Play Store release if you want a different package name — it
 can't be changed after publishing.
+
+## 6. This round: the hero's WebGL animation is gone, admin stats are real, a few new features
+
+**The lag, and the "mouse animation."** There was no actual mouse-tracking
+code anywhere in the app — what was almost certainly meant is the 3D gem in
+the hero (`Hero3D`/`GemModel`), the one thing on the page that ran a
+continuous per-frame render loop. It's gone, along with the `three` /
+`@react-three/fiber` / `@react-three/drei` dependency entirely (previously
+"well over half the JS bundle," by the last round's own notes). The home
+page hero is now plain CSS + SVG — a faceted-diamond mark built from
+gradient polygons, a gentle float and a shimmer sweep, all done with
+`transform`/`opacity` only, so the browser runs it on the compositor thread
+with zero JS work per frame. It also now respects "reduce motion" system
+settings automatically. If "mouse animation" meant something else, say so
+and I'll track that down specifically.
+
+**Admin dashboard — nothing hardcoded anymore.**
+- Added a real `Enquiry` table on the backend (`enquiries`, created
+  automatically by `ddl-auto=update` on next boot — no manual migration
+  needed). Every "ask about this piece," "order via WhatsApp," and
+  contact-form submission now logs one.
+- New `GET /api/admin/stats` returns live counts for Listings, Signups, and
+  Enquiries — the dashboard's three stat tiles are all real numbers now,
+  not `—`.
+- New **Recent enquiries** panel on the dashboard lists every lead with who
+  it's from, what it's about, and when — so "Enquiries" isn't just a count,
+  it's something you can actually act on. Dismissible per-entry.
+- **Edit** now works on listings. The backend's `PUT /api/admin/products/{id}`
+  was already there and unused — the dashboard just never had an edit
+  button. It does now (pencil icon next to delete), and it correctly keeps
+  the existing photo if you don't upload a new one.
+- Swapped the browser `alert()` on delete failures for a proper toast.
+
+**New features.**
+- **Wishlist** — a heart icon on every product card and the product page,
+  persisted locally, with its own page and a nav badge.
+- **Search** on the Shop page, filtering by name, metal, or stone.
+- **Recently viewed** — a row on the home page once you've looked at
+  anything, pulled from local history.
+- A real **contact form** (in addition to the existing mailto/tel/Instagram
+  links) that logs as a `CONTACT` enquiry, so a message sent there shows up
+  for you the same way a product ask does.
+- A small toast system, used for all of the above instead of `alert()`.
+
+**Still true from before:** back-end changes need `mvn spring-boot:run`
+(or your usual deploy) to verify — Maven Central isn't reachable from
+wherever this was generated, same as last time, so this round is reviewed
+by hand rather than compiled here. I checked every new file's signatures
+against how the rest of the codebase already calls `AttemptRateLimiter`,
+`ApiException`, and `AuthGuard`, but a real build is still worth running
+before you deploy.

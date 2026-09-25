@@ -88,3 +88,48 @@ html.light .glass-strong {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---- Hero: cheap, GPU-composited motion only (transform/opacity) ----
+   No render loop, no JS per-frame work — this is what replaced the WebGL
+   gem. Every animation below only ever touches transform/opacity, so the
+   browser can run all of it on the compositor thread without re-laying-out
+   or re-painting the page, which is what actually caused the mobile lag. */
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(1.5deg); }
+}
+@keyframes hero-shimmer {
+  0% { transform: translateX(-60%) translateY(-60%) rotate(20deg); }
+  100% { transform: translateX(60%) translateY(60%) rotate(20deg); }
+}
+@keyframes hero-drift-a {
+  0%, 100% { transform: translate(-8%, -6%) scale(1); }
+  50% { transform: translate(6%, 4%) scale(1.12); }
+}
+@keyframes hero-drift-b {
+  0%, 100% { transform: translate(6%, 8%) scale(1); }
+  50% { transform: translate(-6%, -4%) scale(1.08); }
+}
+@keyframes hero-twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.4); }
+  50% { opacity: var(--twinkle-opacity, 0.9); transform: scale(1); }
+}
+
+.hero-float {
+  animation: hero-float 7s ease-in-out infinite;
+  will-change: transform;
+}
+.hero-shimmer {
+  animation: hero-shimmer 5s ease-in-out infinite alternate;
+}
+.hero-orb-a {
+  animation: hero-drift-a 16s ease-in-out infinite;
+  will-change: transform;
+}
+.hero-orb-b {
+  animation: hero-drift-b 20s ease-in-out infinite;
+  will-change: transform;
+}
+.hero-sparkle {
+  animation: hero-twinkle 3.2s ease-in-out infinite;
+}
